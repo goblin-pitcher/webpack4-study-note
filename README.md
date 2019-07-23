@@ -1,6 +1,6 @@
 # webpack4学习笔记
 ---
-##准备工作
+## 准备工作
 ### 安装webpack、webpack-cli、webpack-dev-server,创建package.json,在package.json的scripts中创建build启动方式，由于准备将webpack.config.js放在build文件夹下，配置如下：
     "scripts": {
       "dev": "cross-env NODE_ENV=development webpack-dev-server --config build/webpack.config.js",
