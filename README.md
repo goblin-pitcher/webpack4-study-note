@@ -103,7 +103,7 @@ html-withimg-loader将html中的img指向的图片打包至dist；html-withimg-l
         // 中未配置main,因此默认找index.js，此配置让这种场景默认找main.js，因此require('strip-ansi')报错
         // mainFiles: ['main'],
         // 引入文件时若未填写后缀，先找同名js，再找css，再json,依次从左到右
-        // extensions: ['js','css','json'],
+        // extensions: ['.js','.css','.json'],
         alias:{
             //别名，代码中'@/'直接指向src目录
             '@':path.resolve(__dirname,'../src'),
