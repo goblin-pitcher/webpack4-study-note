@@ -7,11 +7,12 @@ const Autoprefixer = require('autoprefixer')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const webpack = require('webpack')
+const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer')
 
 const mode = process.env.NODE_ENV
 
 
-module.exports = {
+const config =  {
     devServer: { // 开发服务器配置
         port: 3000,
         progress: true,
@@ -68,7 +69,7 @@ module.exports = {
         // 中未配置main,因此默认找index.js，此配置让这种场景默认找main.js，因此require('strip-ansi')报错
         // mainFiles: ['main'],
         // 引入文件时若未填写后缀，先找同名js，再找css，再json,依次从左到右
-        // extensions: ['js','css','json'],
+        extensions: ['.js', '.css','.json'],
         alias:{
             //别名，代码中'@/'直接指向src目录
             '@':path.resolve(__dirname,'../src'),
@@ -145,7 +146,7 @@ module.exports = {
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
-                use: {
+                use: [{
                     loader: 'eslint-loader',
                     options: {
                         //previous，由于loader执行从下到上，从左到右
@@ -153,13 +154,13 @@ module.exports = {
                         // post则为在普通loader之后执行
                         enforce: 'pre'
                     }
-                }
+                }]
             },
             {
                 test: /\.js$/,
                 // 设置exclude和include可缩小查找范围，提升打包速度
                 exclude: /node_modules/,
-                use: {
+                use: [{
                     // babel-loader很慢，因此除了设置exclude/include，最好将cacheDirectory设为true
                     // 充分利用缓存提高打包速度
                     loader: 'babel-loader',
@@ -178,7 +179,7 @@ module.exports = {
                             "@babel/plugin-transform-runtime"
                         ]
                     }
-                }
+                }]
             },
             {
                 test: /\.(le|c)ss$/,
@@ -219,3 +220,7 @@ module.exports = {
         ]
     }
 }
+if(mode === 'production'){
+    config.plugins.push(new BundleAnalyzerPlugin())
+}
+module.exports = config
