@@ -17,6 +17,7 @@
 		A.props	// 输出{name:'test1',age:18}
 
 * 对原型链赋值
+
 		const decorators = props=>klass=>{
    		 klass.prototype.props = props
 		}
