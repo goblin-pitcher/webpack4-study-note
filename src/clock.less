@@ -1,0 +1,65 @@
+.clock{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 200px;
+  height: 200px;
+  border: 5px solid gray;
+  border-radius: 50%;
+}
+.dial{
+  list-style: none;
+  width: 0;
+  height: 0;
+  >li{
+    width: 2px;
+    height: 4px;
+    background-color: black;
+    position:absolute;
+    left: 50%;
+    transform-origin: 1px 100px;
+  }
+  >li:nth-child(5n+1){
+    height: 8px;
+  }
+}
+
+.pointer{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  >div{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+.node{
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-color: black;
+  opacity: 0.75;
+}
+.second{
+  width: 1px;
+  height: 105px;
+  top: -15px !important;
+  background-color: red;
+  transform-origin: 0.5px 15px;
+  transition: transform 0.8s ease-in-out;
+}
+.minute{
+  width: 2px;
+  height: 75px;
+  background-color: darkgray;
+  transform-origin: 1px 0;
+}
+.hour{
+  width: 3px;
+  height: 60px;
+  background-color: dimgray;
+  transform-origin: 2px 0;
+}

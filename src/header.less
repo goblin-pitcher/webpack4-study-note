@@ -1,0 +1,33 @@
+.shine-words{
+  width:100%;
+  margin: 20px auto;
+  font: oblique bold 30px/60px sans-serif;
+  text-align: center;
+  color: rgba(0,0,0,.3);
+  background-image:linear-gradient(120deg,rgba(0,0,0,1) 40%,rgba(0,0,0,0) 50%,rgba(0,0,0,1) 60%);
+  /*第二个动画中，后面的10s指的是延迟10s,等待第一个动画执行完毕*/
+  animation: move 10s linear,back 5s linear 1 10s;
+  animation-fill-mode: forwards;
+  &:hover{
+    -webkit-background-clip:text;
+    background-image:linear-gradient(120deg,rgba(186,186,186,.3) 40%,rgba(0,0,0,0) 50%,rgba(186,186,186,.3) 60%);
+    animation: shine 8s ease infinite;
+  }
+}
+@keyframes shine{
+  0% { background-color: #e74c3c; }
+  20% { background-color: #f1c40f; }
+  40% { background-color: #1abc9c; }
+  60% { background-color: #3498db; }
+  80% { background-color: #9b59b6; }
+  100% { background-color: #e74c3c; }
+}
+@keyframes move{
+  0% {background-position-x: 0;}
+  100% {background-position-x: 75vw;}
+}
+@keyframes back{
+  0% {background-position-x:75vw;-webkit-background-clip:text;color:rgba(186,0,0,.3)}
+  75% {background-position-x:0px;-webkit-background-clip:text;color:rgba(186,186,0,.3)}
+  100% {background-position-x:25vw;-webkit-background-clip:text;color:rgba(186,186,186,.3)}
+}
