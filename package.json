@@ -1,0 +1,24 @@
+{
+  "name": "webpack4-study-note",
+  "version": "1.0.0",
+  "description": "study notes for webpack4",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goblin-pitcher/webpack4-study-note.git"
+  },
+  "keywords": [
+    "webpack",
+    "webpack4",
+    "优化"
+  ],
+  "author": "xiao.wei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/goblin-pitcher/webpack4-study-note/issues"
+  },
+  "homepage": "https://github.com/goblin-pitcher/webpack4-study-note#readme"
+}
