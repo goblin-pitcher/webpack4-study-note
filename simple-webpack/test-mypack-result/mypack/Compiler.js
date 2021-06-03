@@ -48,18 +48,17 @@ class Compiler {
     this.config = config;
   }
   async run() {
-    const { entry } = this.config;
-    const bundleFiles = await Promise.all(
-      entry.map((enter) => this.bundleModule(enter))
-    );
-    await Promise.all(bundleFiles.map(this.emitFile.bind(this)));
+    const files = await this.bundleFiles()
+    await Promise.all(files.map(this.emitFile.bind(this)));
     console.log("打包完毕");
   }
-
-  async bundleModule(filePath, entryPath, selfModules = {}) {
-    if (!entryPath) {
-      entryPath = filePath;
-    }
+  bundleFiles() {
+    const { entry } = this.config;
+    return Promise.all(
+      entry.map((enter) => this.bundleModule(enter))
+    );
+  }
+  async bundleModule(filePath) {
     let checkFiles = [filePath];
     let checkItem = null;
     const entries = [];
@@ -87,11 +86,11 @@ class Compiler {
       ]);
       checkFiles = dependenciesPath.concat(checkFiles);
     }
-    selfModules = entries.reduce((obj, [key, value]) => {
+    const selfModules = entries.reduce((obj, [key, value]) => {
       obj[key] = value;
       return obj;
     }, {});
-    return { entryPath, modules: selfModules };
+    return { entryPath: filePath, modules: selfModules };
   }
 
   async emitFile(moduleInfo) {
@@ -99,7 +98,7 @@ class Compiler {
       const { output } = this.config;
       const { path: optPath, filename } = output;
       const { entryPath, modules } = moduleInfo;
-      const matchVal = entryPath.match(/[\\/](?<name>.+?)(\.js$)?/);
+      const matchVal = entryPath.match(/[\\/](?<name>.+?)\.js$/);
       const name = matchVal && matchVal.groups.name;
       if (!name) {
         throw "文件名解析错误";
@@ -124,40 +123,44 @@ class Compiler {
   }
   async parseFile(filePath) {
     try {
-      const dependencies = [];
-      let hasUseModule = false;
-      let hasUseExport = false;
       const source = await readFile(filePath, "utf8");
-      const ast = parse(source);
-      traverse(ast, {
-        CallExpression(path) {
-          if (path.node.callee.name === "require") {
-            path.node.callee = t.Identifier("__webpack_require__");
-            dependencies.push(path.node.arguments[0].value);
-          }
-        },
-        MemberExpression(path) {
-          if (!hasUseModule && path.node.object.name === "module") {
-            hasUseModule = true;
-          }
-          if (path.node.object.name === "exports") {
-            hasUseExport = true;
-          }
-        },
-      });
-      const { code } = generate(
-        ast,
-        {
-          jsescOption: {
-            minimal: true,
-          },
-        },
-        source
-      );
-      return { source: code, dependencies, hasUseModule, hasUseExport };
+      // todo:: 此处调用loaders
+      return this.transFileCtx(source);
     } catch (err) {
       console.log(err);
     }
+  }
+  transFileCtx(source) {
+    const dependencies = [];
+    let hasUseModule = false;
+    let hasUseExport = false;
+    const ast = parse(source);
+    traverse(ast, {
+      CallExpression(path) {
+        if (path.node.callee.name === "require") {
+          path.node.callee = t.Identifier("__webpack_require__");
+          dependencies.push(path.node.arguments[0].value);
+        }
+      },
+      MemberExpression(path) {
+        if (!hasUseModule && path.node.object.name === "module") {
+          hasUseModule = true;
+        }
+        if (path.node.object.name === "exports") {
+          hasUseExport = true;
+        }
+      },
+    });
+    const { code } = generate(
+      ast,
+      {
+        jsescOption: {
+          minimal: true,
+        },
+      },
+      source
+    );
+    return { source: code, dependencies, hasUseModule, hasUseExport };
   }
 }
 
