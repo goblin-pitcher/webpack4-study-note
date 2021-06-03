@@ -5,7 +5,7 @@ const { parse } = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const generate = require("@babel/generator").default;
 const t = require("@babel/types");
-const genTemplate = require('./gen-template.js');
+const genTemplate = require("./gen-template.js");
 
 const rootPath = process.cwd();
 const getRootToFilePath = (filePath) => {
@@ -16,30 +16,32 @@ const getRootToFilePath = (filePath) => {
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 const checkAndWrite = (filePath, ...args) => {
-  const fulPath = filePath.split(/\\|\//)
-  const prePath = fulPath.slice(0, fulPath.length - 1).join('\\')
-  if(!fs.existsSync(prePath)) {
-    fs.mkdirSync(prePath, {recursive: true})
+  const fulPath = filePath.split(/\\|\//);
+  const prePath = fulPath.slice(0, fulPath.length - 1).join("\\");
+  if (!fs.existsSync(prePath)) {
+    fs.mkdirSync(prePath, { recursive: true });
   }
-  return writeFile(filePath, ...args)
-}
+  return writeFile(filePath, ...args);
+};
 
 const parseArgs = (hasUseModule, hasUseExport, hasUseRequire) => {
-  const moduleKey = hasUseModule?'module': '__unused_webpack_module'
-  const exportsKey = hasUseExport? 'exports': '__unused_webpack_exports'
-  let args = [moduleKey, exportsKey, '__webpack_require__']
-  if(!hasUseRequire) {
-    const startIndex = args.slice(0, args.length -1).reduceRight((id, item, index)=>{
-      if(id>-1) return id
-      if(!item.includes('unused')) {
-        return index
-      }
-      return id
-    }, -1)
-    args = args.slice(0, startIndex+1)
+  const moduleKey = hasUseModule ? "module" : "__unused_webpack_module";
+  const exportsKey = hasUseExport ? "exports" : "__unused_webpack_exports";
+  let args = [moduleKey, exportsKey, "__webpack_require__"];
+  if (!hasUseRequire) {
+    const startIndex = args
+      .slice(0, args.length - 1)
+      .reduceRight((id, item, index) => {
+        if (id > -1) return id;
+        if (!item.includes("unused")) {
+          return index;
+        }
+        return id;
+      }, -1);
+    args = args.slice(0, startIndex + 1);
   }
-  return args
-}
+  return args;
+};
 
 class Compiler {
   constructor(config) {
@@ -51,19 +53,19 @@ class Compiler {
       entry.map((enter) => this.bundleModule(enter))
     );
     await Promise.all(bundleFiles.map(this.emitFile.bind(this)));
-    console.log('打包完毕')
+    console.log("打包完毕");
   }
 
   async bundleModule(filePath, entryPath, selfModules = {}) {
     if (!entryPath) {
       entryPath = filePath;
     }
-    let checkFiles = [filePath]
-    let checkItem = null
-    const entries = []
+    let checkFiles = [filePath];
+    let checkItem = null;
+    const entries = [];
     // 深度优先
-    while(checkFiles.length) {
-      checkItem = checkFiles.shift()
+    while (checkFiles.length) {
+      checkItem = checkFiles.shift();
       const {
         source,
         dependencies = [],
@@ -71,48 +73,52 @@ class Compiler {
         hasUseExport,
       } = await this.parseFile(checkItem);
       const dependenciesPath = dependencies.map((ph) => {
-        const pathToEntry = path.join(checkItem, '../', ph);
+        const pathToEntry = path.join(checkItem, "../", ph);
         return getRootToFilePath(pathToEntry);
       });
-      entries.unshift([getRootToFilePath(checkItem), {
+      entries.unshift([
+        getRootToFilePath(checkItem),
+        {
           source,
           hasUseModule,
           hasUseExport,
           hasUseRequire: dependenciesPath.length,
-        }])
-      checkFiles = dependenciesPath.concat(checkFiles)
+        },
+      ]);
+      checkFiles = dependenciesPath.concat(checkFiles);
     }
-    selfModules = entries.reduce((obj, [key,value])=>{
-      obj[key] = value
-      return obj
-    }, {})
+    selfModules = entries.reduce((obj, [key, value]) => {
+      obj[key] = value;
+      return obj;
+    }, {});
     return { entryPath, modules: selfModules };
   }
 
   async emitFile(moduleInfo) {
-    try{
+    try {
       const { output } = this.config;
       const { path: optPath, filename } = output;
-      const { entryPath, modules } = moduleInfo
-      const matchVal = entryPath.match(/[\\/](?<name>.+?)(\.js$)?/)
-      const name = matchVal && matchVal.groups.name
-      if(!name) {
-        throw('文件名解析错误')
+      const { entryPath, modules } = moduleInfo;
+      const matchVal = entryPath.match(/[\\/](?<name>.+?)(\.js$)?/);
+      const name = matchVal && matchVal.groups.name;
+      if (!name) {
+        throw "文件名解析错误";
       }
-      const realName = filename.replace(/\[name\]/g, name)
+      const realName = filename.replace(/\[name\]/g, name);
       const writePath = path.join(optPath, realName);
-      const webpackModules = Object.entries(modules).reduce((obj, info)=>{
-        const [key, {source, hasUseModule, hasUseExport, hasUseRequire}] = info;
-        const args = parseArgs(hasUseModule, hasUseExport, hasUseRequire)
+      const webpackModules = Object.entries(modules).reduce((obj, info) => {
+        const [key, { source, hasUseModule, hasUseExport, hasUseRequire }] =
+          info;
+        const args = parseArgs(hasUseModule, hasUseExport, hasUseRequire);
         obj[key] = {
           args,
-          body: source
-        }
+          body: source,
+        };
         return obj;
-      }, {})
-      const writeSource = genTemplate(webpackModules);
-      await checkAndWrite(writePath, writeSource, 'utf8')
-    } catch(err) {
+      }, {});
+      const writeSource = genTemplate(entryPath, webpackModules);
+      await checkAndWrite(writePath, writeSource, "utf8");
+    } catch (err) {
       console.log(err);
     }
   }
@@ -121,7 +127,7 @@ class Compiler {
       const dependencies = [];
       let hasUseModule = false;
       let hasUseExport = false;
-      const source = await readFile(filePath, 'utf8');
+      const source = await readFile(filePath, "utf8");
       const ast = parse(source);
       traverse(ast, {
         CallExpression(path) {
@@ -155,4 +161,4 @@ class Compiler {
   }
 }
 
-module.exports = Compiler
+module.exports = Compiler;
