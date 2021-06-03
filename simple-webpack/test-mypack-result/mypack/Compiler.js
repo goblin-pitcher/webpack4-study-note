@@ -58,24 +58,34 @@ class Compiler {
     if (!entryPath) {
       entryPath = filePath;
     }
-    const {
-      source,
-      dependencies = [],
-      hasUseModule,
-      hasUseExport,
-    } = await this.parseFile(filePath);
-    const dependenciesPath = dependencies.map((ph) => {
-      const pathToEntry = path.join(filePath, '../', ph);
-      return getRootToFilePath(pathToEntry);
-    });
-    await Promise.all(dependenciesPath.map(ph=>this.bundleModule(ph, entryPath, selfModules)));
+    let checkFiles = [filePath]
+    let checkItem = null
+    const entries = []
     // 深度优先
-    selfModules[getRootToFilePath(filePath)] = {
-      source,
-      hasUseModule,
-      hasUseExport,
-      hasUseRequire: dependenciesPath.length,
-    };
+    while(checkFiles.length) {
+      checkItem = checkFiles.shift()
+      const {
+        source,
+        dependencies = [],
+        hasUseModule,
+        hasUseExport,
+      } = await this.parseFile(checkItem);
+      const dependenciesPath = dependencies.map((ph) => {
+        const pathToEntry = path.join(checkItem, '../', ph);
+        return getRootToFilePath(pathToEntry);
+      });
+      entries.unshift([getRootToFilePath(checkItem), {
+          source,
+          hasUseModule,
+          hasUseExport,
+          hasUseRequire: dependenciesPath.length,
+        }])
+      checkFiles = dependenciesPath.concat(checkFiles)
+    }
+    selfModules = entries.reduce((obj, [key,value])=>{
+      obj[key] = value
+      return obj
+    }, {})
     return { entryPath, modules: selfModules };
   }
 
