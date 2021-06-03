@@ -4,5 +4,5 @@ const rootPath = process.cwd();
 const configPath = path.join(rootPath, "webpack.config.js");
 
 const config = require(configPath);
-const compilation = new Complier(config);
-compilation.run();
+const compiler = new Complier(config);
+compiler.run();

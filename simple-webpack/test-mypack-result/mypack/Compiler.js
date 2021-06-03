@@ -48,15 +48,13 @@ class Compiler {
     this.config = config;
   }
   async run() {
-    const files = await this.bundleFiles()
+    const files = await this.bundleFiles();
     await Promise.all(files.map(this.emitFile.bind(this)));
     console.log("打包完毕");
   }
   bundleFiles() {
     const { entry } = this.config;
-    return Promise.all(
-      entry.map((enter) => this.bundleModule(enter))
-    );
+    return Promise.all(entry.map((enter) => this.bundleModule(enter)));
   }
   async bundleModule(filePath) {
     let checkFiles = [filePath];
